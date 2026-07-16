@@ -6,8 +6,8 @@ import jax
 import jax.numpy as jnp
 
 import sys
+import time
 
-print(sys.version)
 
 import flax
 from flax import linen as nn
@@ -16,11 +16,18 @@ from einops import rearrange
 
 from functools import partial
 
+print(f"Python Version == {sys.version}")
+print(jax.devices())
+
+# Loop through all active modules in the runtime environment
+for name, module in sorted(sys.modules.items()):
+    if hasattr(module, "__version__"):
+        print(f"{name} == {module.__version__}")
+
+
+
 # Variational monte carlo driver
 from netket.driver import VMC_SR
-
-
-print(jax.devices())
 
 def extract_patches2d(x, patch_size):
     batch = x.shape[0]
@@ -282,6 +289,8 @@ class Embed(nn.Module):
         return x
 
 
+start_time = time.perf_counter()
+
 seed = 0
 key = jax.random.key(seed)
 
@@ -430,4 +439,8 @@ plt.plot(energy_per_site)
 plt.xlabel("Iterations")
 plt.ylabel("Energy per site")
 
-plt.show()
+plt.savefig("test-run.png")
+
+end_time = time.perf_counter()
+execution_time = end_time - start_time
+print(f"Execution time: {execution_time:.6f} seconds")
