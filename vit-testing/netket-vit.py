@@ -1,20 +1,15 @@
-import matplotlib.pyplot as plt
-
-import netket as nk
-
-import jax
-import jax.numpy as jnp
-
 import sys
 import time
-
-
+from einops import rearrange
 import flax
 from flax import linen as nn
-
-from einops import rearrange
-
 from functools import partial
+import jax
+import jax.numpy as jnp
+import matplotlib.pyplot as plt
+import netket as nk
+# Variational monte carlo driver
+from netket.driver import VMC_SR
 
 print(f"Python Version == {sys.version}")
 print(jax.devices())
@@ -23,11 +18,6 @@ print(jax.devices())
 for name, module in sorted(sys.modules.items()):
     if hasattr(module, "__version__"):
         print(f"{name} == {module.__version__}")
-
-
-
-# Variational monte carlo driver
-from netket.driver import VMC_SR
 
 def extract_patches2d(x, patch_size):
     batch = x.shape[0]
@@ -370,7 +360,8 @@ key = jax.random.key(seed)
 
 L = 10
 n_dim = 2
-J2 = 0.5
+# J2 / J1 => Go from J2 = 0.1 to J2 = 1
+J2 = 2
 
 lattice = nk.graph.Hypercube(length=L, n_dim=n_dim, pbc=True, max_neighbor_order=2)
 
@@ -439,7 +430,8 @@ plt.plot(energy_per_site)
 plt.xlabel("Iterations")
 plt.ylabel("Energy per site")
 
-plt.savefig("test-run.png")
+plotname = "J2-" + str(J2) + "vit-run.png"
+plt.savefig(plotname)
 
 end_time = time.perf_counter()
 execution_time = end_time - start_time

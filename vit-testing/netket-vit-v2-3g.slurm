@@ -2,7 +2,7 @@
 #SBATCH --job-name=gpu_job
 #SBATCH --qos=gpu
 #SBATCH --partition=gpuq
-#SBATCH --gres=gpu:A100.40gb:1
+#SBATCH --gres=gpu:3g.40gb:1
 
 #SBATCH --output=gpu_job-%j.out
 #SBATCH --error=gpu_job-%j.err
@@ -11,7 +11,7 @@
 #SBATCH --ntasks-per-node=1
 
 #SBATCH --mem=10G
-#SBATCH --time=1-23:59:00
+#SBATCH --time=06:00:00
 
 # to see ID and state of GPUs assigned
 nvidia-smi
