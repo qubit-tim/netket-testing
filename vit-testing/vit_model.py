@@ -226,6 +226,14 @@ class FMHA(nn.Module):
             self.alpha = roll2d(
                 self.alpha, jnp.arange(sq_n_patches), jnp.arange(sq_n_patches)
             )
+            # roll2d stacks the (i, j) grid shift into two separate axes of
+            # size sq_n_patches; flatten them back into a single row-major
+            # patch axis (matching extract_patches2d's p = i * sq_n_patches + j
+            # ordering) to get the (n_heads, n_patches, n_patches) shape
+            # matmul expects.
+            self.alpha = self.alpha.reshape(
+                self.n_heads, self.n_patches, self.n_patches
+            )
         else:
             self.alpha = self.param(
                 "alpha",
