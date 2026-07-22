@@ -102,7 +102,7 @@ class Encoder(nn.Module):
         return x
 
 
-class OuputHead(nn.Module):
+class OutputHead(nn.Module):
     d_model: int  # dimensionality of the embedding space
     param_dtype = jnp.float64
 
