@@ -147,7 +147,7 @@ log = nk.logging.JsonLog(
 
 
 def divergence_guard(step, logged_data, driver):
-    energy_mean = logged_data["Energy"]["Mean"]
+    energy_mean = logged_data["Energy"].Mean
     energy_per_site = float(jax.device_get(energy_mean).real) / (L * L * 4)
     if abs(energy_per_site) > args.divergence_threshold:
         print(

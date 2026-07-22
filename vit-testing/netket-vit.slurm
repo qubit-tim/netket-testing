@@ -24,7 +24,7 @@
 #SBATCH --mem-per-cpu=8G
 #SBATCH --hint=nomultithread  # Disable Hyperthreading
 
-set echo
+set -x
 umask 0027
 
 # to see ID and state of GPUs assigned
