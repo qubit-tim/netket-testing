@@ -165,7 +165,7 @@ class ViT(nn.Module):
             transl_invariant=self.transl_invariant,
         )(x)
 
-        log_psi = OuputHead(d_model=self.d_model)(y)
+        log_psi = OutputHead(d_model=self.d_model)(y)
 
         return log_psi
 
