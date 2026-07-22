@@ -10,12 +10,19 @@ log_cosh = nk.nn.activation.log_cosh  # Logarithm of the hyperbolic cosine, impl
 
 
 def extract_patches2d(x, patch_size):
+    import math
+
     batch = x.shape[0]
-    n_patches = int((x.shape[1] // patch_size**2) ** 0.5)
-    x = x.reshape(batch, n_patches, patch_size, n_patches, patch_size)
+    n_total_patches = x.shape[1] // (patch_size**2)
+    n_side = math.isqrt(n_total_patches)
+    if n_side * n_side != n_total_patches:
+        raise ValueError(
+            f"Input length {x.shape[1]} with patch_size={patch_size} does not form a square grid of patches."
+        )
+
+    x = x.reshape(batch, n_side, patch_size, n_side, patch_size)
     x = x.transpose(0, 1, 3, 2, 4)
-    x = x.reshape(batch, n_patches, n_patches, -1)
-    x = x.reshape(batch, n_patches * n_patches, -1)
+    x = x.reshape(batch, n_side * n_side, -1)
     return x
 
 
