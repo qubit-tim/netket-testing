@@ -39,4 +39,4 @@ export NETKET_EXPERIMENTAL_SHARDING=0
 # Tell Jax that we want to use GPUs. This is generally not needed but can't hurt
 export JAX_PLATFORM_NAME=gpu
 
-srun -uv python3 /home/tcosgrov/code/netket-testing/netket-vit.py
+srun -uv python3 /home/tcosgrov/code/netket-testing/netket-vit.py "$@"

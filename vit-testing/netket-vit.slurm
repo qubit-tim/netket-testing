@@ -43,4 +43,4 @@ source /home/tcosgrov/code/netket-testing/.venv/bin/activate
 
 # srun -uv python3 /home/tcosgrov/code/netket-testing/netket-vit.py
 
-python /home/tcosgrov/code/netket-testing/vit-testing/netket-vit.py
+python /home/tcosgrov/code/netket-testing/vit-testing/netket-vit.py "$@"

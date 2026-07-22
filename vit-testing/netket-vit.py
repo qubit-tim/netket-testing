@@ -1,3 +1,5 @@
+import argparse
+import os
 import sys
 import time
 from einops import rearrange
@@ -355,13 +357,44 @@ log_psi = vit_module.apply(params, spin_configs)
 
 print(f"{log_psi.shape = }")
 
-seed = 0
-key = jax.random.key(seed)
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Train a ViT variational wave function on the J1-J2 Heisenberg model."
+    )
+    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--L", type=int, default=10, help="Linear lattice size")
+    parser.add_argument("--n-dim", type=int, default=2)
+    parser.add_argument(
+        "--J2", type=float, default=2, help="J2/J1 ratio (0.1 to 1 is the typical sweep)"
+    )
+    parser.add_argument("--num-layers", type=int, default=4)
+    parser.add_argument("--d-model", type=int, default=60)
+    parser.add_argument("--n-heads", type=int, default=10)
+    parser.add_argument("--patch-size", type=int, default=2)
+    parser.add_argument(
+        "--transl-invariant", dest="transl_invariant", action="store_true", default=True
+    )
+    parser.add_argument(
+        "--no-transl-invariant", dest="transl_invariant", action="store_false"
+    )
+    parser.add_argument("--n-samples", type=int, default=4096)
+    parser.add_argument("--sweep-d-max", type=int, default=2)
+    parser.add_argument("--learning-rate", type=float, default=0.0075)
+    parser.add_argument("--diag-shift", type=float, default=1e-4)
+    parser.add_argument("--chunk-size", type=int, default=512)
+    parser.add_argument("--n-iter", type=int, default=800)
+    parser.add_argument("--output-dir", type=str, default=".")
+    return parser.parse_args()
 
-L = 10
-n_dim = 2
+
+args = parse_args()
+
+key = jax.random.key(args.seed)
+
+L = args.L
+n_dim = args.n_dim
 # J2 / J1 => Go from J2 = 0.1 to J2 = 1
-J2 = 2
+J2 = args.J2
 
 lattice = nk.graph.Hypercube(length=L, n_dim=n_dim, pbc=True, max_neighbor_order=2)
 
@@ -375,23 +408,27 @@ hamiltonian = nk.operator.Heisenberg(
 
 # Intiialize the ViT variational wave function
 vit_module = ViT(
-    num_layers=4, d_model=60, n_heads=10, patch_size=2, transl_invariant=True
+    num_layers=args.num_layers,
+    d_model=args.d_model,
+    n_heads=args.n_heads,
+    patch_size=args.patch_size,
+    transl_invariant=args.transl_invariant,
 )
 
 key, subkey = jax.random.split(key)
 params = vit_module.init(subkey, spin_configs)
 
 # Metropolis Local Sampling
-N_samples = 4096
+N_samples = args.n_samples
 sampler = nk.sampler.MetropolisExchange(
     hilbert=hilbert,
     graph=lattice,
-    d_max=2,
+    d_max=args.sweep_d_max,
     n_chains=N_samples,
     sweep_size=lattice.n_nodes,
 )
 
-optimizer = nk.optimizer.Sgd(learning_rate=0.0075)
+optimizer = nk.optimizer.Sgd(learning_rate=args.learning_rate)
 
 key, subkey = jax.random.split(key, 2)
 vstate = nk.vqs.MCState(
@@ -401,7 +438,7 @@ vstate = nk.vqs.MCState(
     n_samples=N_samples,
     n_discard_per_chain=0,
     variables=params,
-    chunk_size=512,
+    chunk_size=args.chunk_size,
 )
 
 N_params = nk.jax.tree_size(vstate.parameters)
@@ -411,14 +448,14 @@ print("Number of parameters = ", N_params, flush=True)
 vmc = VMC_SR(
     hamiltonian=hamiltonian,
     optimizer=optimizer,
-    diag_shift=1e-4,
+    diag_shift=args.diag_shift,
     variational_state=vstate,
     mode="complex",
 )
 # Optimization
 log = nk.logging.RuntimeLog()
 
-N_opt = 800
+N_opt = args.n_iter
 vmc.run(n_iter=N_opt, out=log)
 
 energy_per_site = log.data["Energy"]["Mean"].real / (L * L * 4)
@@ -430,7 +467,10 @@ plt.plot(energy_per_site)
 plt.xlabel("Iterations")
 plt.ylabel("Energy per site")
 
-plotname = "J2-" + str(J2) + "vit-run.png"
+os.makedirs(args.output_dir, exist_ok=True)
+plotname = os.path.join(
+    args.output_dir, f"J2-{args.J2}_L-{args.L}_seed-{args.seed}-vit-run.png"
+)
 plt.savefig(plotname)
 
 end_time = time.perf_counter()

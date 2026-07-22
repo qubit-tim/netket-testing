@@ -24,4 +24,4 @@ module load python/3.12.1-33
 source /home/tcosgrov/code/netket-testing/.venv/bin/activate
 
 #Execute
-python /home/tcosgrov/code/netket-testing/vit-testing/netket-vit.py
+python /home/tcosgrov/code/netket-testing/vit-testing/netket-vit.py "$@"
