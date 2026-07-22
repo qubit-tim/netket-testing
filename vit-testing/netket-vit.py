@@ -48,6 +48,18 @@ def parse_args():
     parser.add_argument("--chunk-size", type=int, default=512)
     parser.add_argument("--n-iter", type=int, default=800)
     parser.add_argument("--output-dir", type=str, default=".")
+    parser.add_argument(
+        "--divergence-threshold",
+        type=float,
+        default=10.0,
+        help=(
+            "Stop the run early if |energy per site| exceeds this value. "
+            "Converged runs typically sit around O(1), so this catches "
+            "blow-ups (seen e.g. in the frustrated J2=2 regime) well before "
+            "they reach extreme values, without wasting the rest of the "
+            "GPU allocation on a diverged run."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -126,8 +138,22 @@ vmc = VMC_SR(
 # Optimization
 log = nk.logging.RuntimeLog()
 
+
+def divergence_guard(step, logged_data, driver):
+    energy_per_site = logged_data["Energy"]["Mean"].real / (L * L * 4)
+    if abs(energy_per_site) > args.divergence_threshold:
+        print(
+            f"Diverging: energy_per_site={energy_per_site:.4f} exceeds "
+            f"--divergence-threshold={args.divergence_threshold} at step {step}. "
+            "Stopping early.",
+            flush=True,
+        )
+        return False
+    return True
+
+
 N_opt = args.n_iter
-vmc.run(n_iter=N_opt, out=log)
+vmc.run(n_iter=N_opt, out=log, callback=divergence_guard)
 
 energy_per_site = log.data["Energy"]["Mean"].real / (L * L * 4)
 
