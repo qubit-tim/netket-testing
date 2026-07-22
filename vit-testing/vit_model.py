@@ -218,11 +218,14 @@ class FMHA(nn.Module):
                 self.param_dtype,
             )
             sq_n_patches = int(self.n_patches**0.5)
-            assert sq_n_patches * sq_n_patches == self.n_patches
+            if sq_n_patches * sq_n_patches != self.n_patches:
+                raise ValueError(
+                    "transl_invariant=True requires n_patches to be a perfect square; "
+                    f"got n_patches={self.n_patches}"
+                )
             self.alpha = roll2d(
                 self.alpha, jnp.arange(sq_n_patches), jnp.arange(sq_n_patches)
             )
-            self.alpha = self.alpha.reshape(self.n_heads, -1, self.n_patches)
         else:
             self.alpha = self.param(
                 "alpha",
