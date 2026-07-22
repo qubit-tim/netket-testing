@@ -74,6 +74,9 @@ n_dim = args.n_dim
 # J2 / J1 => Go from J2 = 0.1 to J2 = 1
 J2 = args.J2
 
+os.makedirs(args.output_dir, exist_ok=True)
+run_name = f"J2-{args.J2}_L-{args.L}_seed-{args.seed}"
+
 lattice = nk.graph.Hypercube(length=L, n_dim=n_dim, pbc=True, max_neighbor_order=2)
 
 # Hilbert space of spins on the graph
@@ -135,8 +138,12 @@ vmc = VMC_SR(
     variational_state=vstate,
     mode="complex",
 )
-# Optimization
-log = nk.logging.RuntimeLog()
+# Optimization. JsonLog persists the raw energy history (and periodic
+# parameter checkpoints) to disk as the run progresses, so results can be
+# reanalyzed or resumed from without rerunning the (expensive) GPU job.
+log = nk.logging.JsonLog(
+    os.path.join(args.output_dir, run_name), save_params=True, save_params_every=50
+)
 
 
 def divergence_guard(step, logged_data, driver):
@@ -164,10 +171,7 @@ plt.plot(energy_per_site)
 plt.xlabel("Iterations")
 plt.ylabel("Energy per site")
 
-os.makedirs(args.output_dir, exist_ok=True)
-plotname = os.path.join(
-    args.output_dir, f"J2-{args.J2}_L-{args.L}_seed-{args.seed}-vit-run.png"
-)
+plotname = os.path.join(args.output_dir, f"{run_name}-vit-run.png")
 plt.savefig(plotname)
 
 end_time = time.perf_counter()
