@@ -44,6 +44,12 @@ sbatch --gres=gpu:3g.40gb:1   vit-testing/netket-vit.slurm --J2 2 --diag-shift 1
 The `.slurm` script hardcodes the absolute path `/home/tcosgrov/code/netket-testing` to source the venv
 and locate `netket-vit.py` — update both paths together if the repo is ever relocated.
 
+## Git workflow
+
+- Never commit directly to `main`. Before making any commits, create and switch to a new branch
+  (e.g. `git checkout -b <descriptive-name>`), then commit there and open a PR to merge into `main`.
+- The name of any Claude created branches must be of the format 'claude/<descriptive-name>'
+
 ## Architecture
 
 - `vit_model.py` — the ViT ansatz itself, as flax `nn.Module`s:
