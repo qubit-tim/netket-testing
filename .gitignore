@@ -61,6 +61,8 @@ cover/
 
 # Django stuff:
 *.log
+# ...except NetKet JsonLog run outputs, which are meaningful raw data (see CLAUDE.md)
+!vit-testing/**/*.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
